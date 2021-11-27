@@ -11,8 +11,364 @@
 Pertama untuk menyambungkan node2 lainnya ke internet, isikan `iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE -s 192.192.0.0/16` pada roter "Foosha"
 Isikan `echo nameserver 192.168.122.1 > /etc/resolv.conf` pada server2 lainnya agar nameservernya terganti dan bisa menerima internet. dan atur konfigurasi nodenya sesuai dengan modul sebelumnya.
 
+## VLSM di GNS3
 
-## CIDR
+* Pertama menentukan nama dan panjang atau area untuk setiap subnetnya
+![nyoba tree subnetting_page-0001](https://user-images.githubusercontent.com/76694068/143686688-91b23e9c-e40c-46ee-8526-e180285333dd.jpg)
+
+* Setelah mendapatkan nama dan alokasi subnet, daftar nama nama semua subnet, jumlah hostnya serta lenghtnya
+![image](https://user-images.githubusercontent.com/76694068/143686735-2709fc63-e667-45c9-916b-96d0dc99142c.png)
+
+* Kemudian, cari NID yang dibutuhkan melalui metode tree
+![PohFak-Page-2 drawio](https://user-images.githubusercontent.com/76694068/143686764-b67cdd55-7e39-496f-b6d8-d99702185a99.png)
+      Keterangan :
+      Contoh cara menghitung setiap branch IP tree :
+
+      192.199.0.0 /19 akan diubah ke /20
+      pada tabel di modul akan diperlihatkan jika wildcard yang dimiliki /20 adalah 0.0.15.255.
+
+      Berarti untuk tree bagian kiri range nilainya akan ada diantara
+      Batas bawah 	: 192.199.0.0 /20 sampai
+      Batas atas 	: 192.199.(0+15).(0+255) = 192.199.15.255
+
+      Untuk tree bagian kanan, batas bawahnya ditambah dengan 0.0.0.1 untuk IP dari subnet itu sendiri dan karena telah dipakai oleh batas atas cabang kanan maka total menjadi  
+      192.199.15.256.
+
+      ** Perlu diingat jika batas max dari bit ipv4 adalah 255, maka alokasi bit yang berlebihan akan dipindahkan ke depannya sehingga menjadi 192.199.16.0 **
+
+      Sedang untuk tree bagian kanan range nilainya akan ada diantara
+      Batas bawah	: 192.199.16.0 sampai
+      Batas atas 	: 192.199.(16+15).(0+255) = 192.199.31.255
+
+      **Sama seperti untuk sisi kiri tree, jika bagian ini diturunkan, maka bagian ini juga ditambah 0.0.0.1 dan akan berubah menjadi 192.199.32.0
+      Perlu diingat pula, bahwa yang ditulis dalam tree adalah batas bawah dari masing masing cabang**
+
+```
+Lakukan langkah diatas sampai seluruh lenght di dalam daftar terpenuhi.
+```
+
+* Jika telah menemukan NID, maka NID, Netmask, dan Broadcastnya
+![list_page-0001](https://user-images.githubusercontent.com/76694068/143686902-5061b6f2-1c5e-4909-b98a-00a2c9406600.jpg)
+
+
+*** Routing
+* Untuk routing, pertama masukkan konfigurasi kedalam semua node. sertakan `gateway` untuk tiap `eth0` dalam tiap node. `gateway` digunakan untuk memberikan akses internet pada node, agar ada jalan untuk terhubung dengan internet.
+* Gateaway ditentukan dengan melihat IP mana yang dituju oleh node tersebut, atau tempat dimana node tersebut akan keluar.
+```
+FOOSHA
+# Foosha (Router)
+auto eth0
+iface eth0 inet dhcp
+
+# Mengarah ke Blueno A1
+auto eth1
+iface eth1 inet static
+  address 192.199.8.1
+  netmask 255.255.252.0
+  
+# Mengarah ke Doriki A14
+auto eth2
+iface eth2 inet static
+  address 192.199.27.161
+  netmask 255.255.255.252
+
+# Mengarah ke Guanhao A7
+auto eth4
+iface eth4 inet static
+  address 192.199.27.153
+  netmask 255.255.255.252
+  
+# Mengarah ke Water7 A3
+auto eth3
+iface eth3 inet static
+  address 192.199.27.145
+  netmask 255.255.255.252
+
+```
+```
+WATER7
+Water7 (Router)
+# Mengarah ke Foosha A3
+auto eth0
+iface eth 0 inet static
+  address 192.199.27.146
+  netmask 255.255.255.252
+  gateway 192.199.27.145
+
+#mengarah ke chiper A2
+auto eth2
+iface eth2 inet static
+  address 192.199.16.1
+  netmask 255.255.252.0
+
+#mengarah ke pucci A4
+auto eth1
+iface eth1 inet static
+address 192.199.27.149
+netmask 255.255.255.252
+
+```
+```
+GUANHAO
+#mengarah ke foosha A7
+auto eth0
+iface eth0 inet static
+address 192.199.27.154
+netmask 255.255.255.252
+gateway 192.199.27.153
+
+#subnet ke jabra A8
+auto eth1
+iface eth1 inet static
+address 192.199.20.1
+netmask 255.255.252.0
+
+#subnet ke oimo A11
+auto eth3
+iface eth3 inet static
+address 192.199.27.157
+netmask 255.255.255.252
+
+#subnet ke maingate/alabasta A6
+auto eth2
+iface eth2 inet static
+address 192.199.24.1
+netmask 255.255.254.0
+```
+```
+PUCCI
+#subnet kembali ke water7 A4
+auto eth0
+iface eth0 inet static
+address 192.199.27.150
+netmask 255.255.255.252
+gateway 192.199.27.149
+
+#subnet ke courtyard/calmbelt A9
+auto eth2
+iface eth2 inet static
+address 192.199.0.1
+netmask 255.255.248.0
+
+#subnet ke Jipangu A5
+auto eth1
+iface eth1 inet static
+address 192.199.27.1
+netmask 255.255.255.128
+
+```
+```
+ALABASTA
+#subnet ke maingate A6
+auto eth0
+iface eth0 inet static
+address 192.199.24.2
+netmask 255.255.254.0
+gateway 192.199.24.1
+
+#subnet ke jorge A10
+auto eth1
+iface eth1 inet static
+address 192.199.27.129
+netmask 255.255.255.240
+
+```
+```
+OIMO
+#subnet ke guanhao A11
+auto eth0
+iface eth0 inet static
+address 192.199.27.158
+netmask 255.255.255.252
+gateway 192.199.27.157
+
+#subnet ke fukurou A15
+auto eth1
+iface eth1 inet static
+address 192.199.27.165
+netmask 255.255.255.252
+
+#subnet ke enieslobby/seastone A12
+auto eth2
+iface eth2 inet static
+address 192.199.26.1
+netmask 255.255.255.0
+
+```
+```
+SEASTONE
+#subnet ke enieslobby A12
+auto eth0
+iface eth0 inet static
+address 192.199.26.2
+netmask 255.255.255.0
+gateway 192.199.26.1
+
+#subnet ke elena A13
+auto eth1
+iface eth1 inet static
+address 192.199.12.1
+netmask 255.255.252.0
+
+```
+Sedangkan untuk konfigurasi client :
+```
+BLUENO
+# Blueno (1000 Host) A6
+auto eth0
+iface eth0 inet static
+  address 192.199.8.2
+  netmask 255.255.252.0
+  gateway 192.199.8.1
+
+DORIKI
+#Doriki (client)
+auto eth0
+iface eth0 inet static
+address 192.199.27.162
+netmask 255.255.255.252
+gateway 192.199.27.161
+
+CHIPER
+#subnet ke water7 A2
+auto eth0
+iface eth0 inet static
+address 192.199.16.2
+netmask 255.255.252.0
+gateway 192.199.16.1
+
+CALMBELT
+#subnet ke pucci A9
+auto eth0
+iface eth0 inet static
+address 192.199.0.2
+netmask 255.255.248.0
+gateway 192.199.0.1
+
+COURTYARD
+#subnet ke pucci A9
+auto eth0
+iface eth0 inet static
+address 192.199.0.3
+netmask 255.255.248.0
+gateway 192.199.0.1
+
+JIPANGU
+#subnet ke pucci A5
+auto eth0
+iface eth0 inet static
+address 192.199.27.2
+netmask 255.255.255.128
+gateway 192.199.27.1
+
+JABRA
+#subnet ke guanhao A8
+auto eth0
+iface eth0 inet static
+address 192.199.20.2
+netmask 255.255.252.0
+gateway 192.199.20.1
+
+MAINGATE
+#subnet A6
+auto eth0
+iface eth0 inet static
+address 192.199.24.3
+netmask 255.255.254.0
+gateway 192.199.24.1
+
+JORGE
+#subnet A10
+auto eth0
+iface eth0 inet static
+address 192.199.27.130
+netmask 255.255.255.240
+gateway 192.199.27.129
+
+ENIESLOBBY
+#subnet A12
+auto eth0
+iface eth0 inet static
+address 192.199.26.3
+netmask 255.255.255.0
+gateway 192.199.26.1
+
+ELENA
+#subnet A13
+auto eth0
+iface eth0 inet static
+address 192.199.12.2
+netmask 255.255.252.0
+gateway 192.199.12.1
+
+FUKUROU
+#subnet A15
+auto eth0
+iface eth0 inet static
+address 192.199.27.166
+netmask 255.255.255.252
+gateway 192.199.27.165
+
+```
+
+* Kemudian untuk routing sendiri, dimasukkan pada router yang mempunyai node yang tidak terhubung langsung dengannya. Maka dari pertimbangan tersebut, didapatkan :
+```
+**FOOSHA**
+#A2 CHIPER
+route add -net 192.199.16.0 netmask 255.255.252.0 gw 192.199.27.146
+#A4 PUCCI
+route add -net 192.199.27.148 netmask 255.255.255.252 gw 192.199.27.146
+#A5 JIPANGU
+route add -net 192.199.27.148 netmask 255.255.255.252 gw 192.199.27.146
+#A9 CALMBELT/COURTYARD
+route add -net 192.199.0.0 netmask 255.255.248.0 gw 192.199.27.146
+
+#A6 MAINGATE
+route add -net 192.199.24.0 netmask 255.255.254.0 gw 192.199.27.154
+#A8 JABRA
+route add -net 192.199.20.0 netmask 255.255.252.0 gw 192.199.27.154
+#A12 ENIESLOBBY
+route add -net 192.199.26.0 netmask 255.255.255.0 gw 192.199.27.154
+#A13 ELENA
+route add -net 192.199.12.0 netmask 255.255.252.0 gw 192.199.27.154
+#A15 FUKUROU
+route add -net 192.199.27.164 netmask 255.255.255.252 gw 192.199.27.154
+#A10 JORGE
+route add -net 192.199.27.128 netmask 255.255.255.240 gw 192.199.27.154
+#A11 OIMO
+route add -net 192.199.27.156 netmask 255.255.255.252 gw 192.199.27.154
+
+**WATER 7**
+#A9 CALMBELT/COURTYARD
+route add -net 192.199.0.0 netmask 255.255.248.0 gw 192.199.27.150
+#A5 JIPANGU
+route add -net 192.199.27.148 netmask 255.255.255.252 gw 192.199.27.150
+#A3 FOOSHA
+route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.199.27.145
+
+**GUANHAO**
+#A10 JORGE
+route add -net 192.199.27.128 netmask 255.255.255.240 gw 192.199.24.2
+#A12 ENIESLOBBY
+route add -net 192.199.26.0 netmask 255.255.255.0 gw 192.199.27.158
+#A13 ELENA
+route add -net 192.199.12.0 netmask 255.255.252.0 gw 192.199.27.158
+#A15 FUKUROU
+route add -net 192.199.27.164 netmask 255.255.255.252 gw 192.199.27.158
+#A7 FOOSHA
+route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.199.27.153 
+
+**OIMO**
+#A13 ELENA
+route add -net 192.199.12.0 netmask 255.255.252.0 gw 192.199.26.2
+#A11 GUANHAO
+route add -net 0.0.0.0 netmask 0.0.0.0 gw 192.199.27.157 
+
+```
+Maka dikatakan brhasil jika bisa ping pada internet.
+
+
+## CIDR di CPT
 
 Pertama-tama kita tentukan nama dan panjang subnet untuk setiap subnetnya.
 ![0](https://cdn.discordapp.com/attachments/804405775988555776/914141419193634826/unknown.png)
