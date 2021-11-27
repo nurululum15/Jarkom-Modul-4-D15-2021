@@ -22,26 +22,27 @@ Isikan `echo nameserver 192.168.122.1 > /etc/resolv.conf` pada server2 lainnya a
 * Kemudian, cari NID yang dibutuhkan melalui metode tree
 ![PohFak-Page-2 drawio](https://user-images.githubusercontent.com/76694068/143686764-b67cdd55-7e39-496f-b6d8-d99702185a99.png)
       Keterangan :
-      Contoh cara menghitung setiap branch IP tree :
+      
+     Contoh cara menghitung setiap branch IP tree :
 
-      192.199.0.0 /19 akan diubah ke /20
-      pada tabel di modul akan diperlihatkan jika wildcard yang dimiliki /20 adalah 0.0.15.255.
+     contoh pada NID 192.199.0.0 /19 akan diubah ke /20
+     pada tabel di modul akan diperlihatkan jika wildcard yang dimiliki /20 adalah 0.0.15.255.
 
-      Berarti untuk tree bagian kiri range nilainya akan ada diantara
-      Batas bawah 	: 192.199.0.0 /20 sampai
-      Batas atas 	: 192.199.(0+15).(0+255) = 192.199.15.255
+     Berarti untuk tree bagian kiri range nilainya akan ada diantara
+     Batas bawah 	: 192.199.0.0 /20 sampai
+     Batas atas 	: 192.199.(0+15).(0+255) = 192.199.15.255
 
-      Untuk tree bagian kanan, batas bawahnya ditambah dengan 0.0.0.1 untuk IP dari subnet itu sendiri dan karena telah dipakai oleh batas atas cabang kanan maka total menjadi  
-      192.199.15.256.
+     Untuk tree bagian kanan, batas bawahnya ditambah dengan 0.0.0.1 untuk IP dari subnet itu sendiri dan karena telah dipakai oleh batas atas cabang kanan maka total menjadi  
+     192.199.15.256.
 
-      ** Perlu diingat jika batas max dari bit ipv4 adalah 255, maka alokasi bit yang berlebihan akan dipindahkan ke depannya sehingga menjadi 192.199.16.0 **
+     Perlu diingat jika batas max dari bit ipv4 adalah 255, maka alokasi bit yang berlebihan akan dipindahkan ke depannya sehingga menjadi 192.199.16.0
 
-      Sedang untuk tree bagian kanan range nilainya akan ada diantara
-      Batas bawah	: 192.199.16.0 sampai
-      Batas atas 	: 192.199.(16+15).(0+255) = 192.199.31.255
+     Sedang untuk tree bagian kanan range nilainya akan ada diantara
+     Batas bawah	: 192.199.16.0 sampai
+     Batas atas 	: 192.199.(16+15).(0+255) = 192.199.31.255
 
-      **Sama seperti untuk sisi kiri tree, jika bagian ini diturunkan, maka bagian ini juga ditambah 0.0.0.1 dan akan berubah menjadi 192.199.32.0
-      Perlu diingat pula, bahwa yang ditulis dalam tree adalah batas bawah dari masing masing cabang**
+     Sama seperti untuk sisi kiri tree, jika bagian ini diturunkan, maka bagian ini juga ditambah 0.0.0.1 dan akan berubah menjadi 192.199.32.0
+     Perlu diingat pula, bahwa yang ditulis dalam tree adalah batas bawah dari masing masing cabang
 
 ```
 Lakukan langkah diatas sampai seluruh lenght di dalam daftar terpenuhi.
@@ -51,7 +52,7 @@ Lakukan langkah diatas sampai seluruh lenght di dalam daftar terpenuhi.
 ![list_page-0001](https://user-images.githubusercontent.com/76694068/143686902-5061b6f2-1c5e-4909-b98a-00a2c9406600.jpg)
 
 
-*** Routing
+### Routing
 * Untuk routing, pertama masukkan konfigurasi kedalam semua node. sertakan `gateway` untuk tiap `eth0` dalam tiap node. `gateway` digunakan untuk memberikan akses internet pada node, agar ada jalan untuk terhubung dengan internet.
 * Gateaway ditentukan dengan melihat IP mana yang dituju oleh node tersebut, atau tempat dimana node tersebut akan keluar.
 ```
