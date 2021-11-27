@@ -17,6 +17,7 @@ Isikan `echo nameserver 192.168.122.1 > /etc/resolv.conf` pada server2 lainnya a
 ![nyoba tree subnetting_page-0001](https://user-images.githubusercontent.com/76694068/143686688-91b23e9c-e40c-46ee-8526-e180285333dd.jpg)
 
 * Setelah mendapatkan nama dan alokasi subnet, daftar nama nama semua subnet, jumlah hostnya serta lenghtnya
+
 ![image](https://user-images.githubusercontent.com/76694068/143686735-2709fc63-e667-45c9-916b-96d0dc99142c.png)
 
 * Kemudian, cari NID yang dibutuhkan melalui metode tree
